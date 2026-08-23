@@ -1,5 +1,7 @@
 import "@/app/globals.css";
 import { Cormorant_Garamond, Lato } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Providers } from "@/app/providers";
 
 const display = Cormorant_Garamond({
   variable: "--font-display",
@@ -20,11 +22,12 @@ export const metadata: Metadata = {
   description: "Scan. Savour. Stay. Experience table-side ordering at The Aura Leaf.",
   generator: "Next.js",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -35,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full scroll-smooth`}>
       <body className="min-h-full flex flex-col font-sans text-sm antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

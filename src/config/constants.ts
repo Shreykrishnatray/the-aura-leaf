@@ -46,7 +46,7 @@ export const SESSION_STATUS_LABELS: Record<string, string> = {
 export const DIETARY_LABELS: Record<string, string> = {
   vegetarian: "Vegetarian",
   vegan: "Vegan",
-  non-vegetarian: "Non-Vegetarian",
+  "non-vegetarian": "Non-Vegetarian",
   eggetarian: "Eggetarian",
   pescatarian: "Pescatarian",
 };

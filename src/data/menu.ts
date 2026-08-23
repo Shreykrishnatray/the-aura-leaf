@@ -96,7 +96,7 @@ function mods(ids: string[]): MenuItemModifier[] {
   return ids.map((id) => MODIFIERS[id as keyof typeof MODIFIERS]);
 }
 
-export const MENU_ITEMS: MenuItem[] = [
+export const MENU_ITEMS: readonly MenuItem[] = [
   // ---- Starters ----
   {
     id: "m-panner-tikka",
@@ -124,7 +124,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Tender chicken leg meat marinated in house spices and smoked tomato purée, grilled to perfection.",
     price: 320,
-    image: "/images/chicken-tikka.jpg",
+    image: "/images/chicken-tikka-masala.jpg",
     dietary: "non-vegetarian",
     spicyLevel: 1,
     isFeatured: true,
@@ -143,7 +143,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Crispy saffron risotto balls studded with sweet corn and fresh herbs, served with a tamarind glaze.",
     price: 260,
-    image: "/images/arancini.jpg",
+    image: "/images/corn-herb-arancini.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,
@@ -162,7 +162,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Wild-caught salmon glazed with Kashmiri chili and honey, flash-grilled and finished with a charred edge.",
     price: 420,
-    image: "/images/salmon.jpg",
+    image: "/images/tandoori-salmon.jpg",
     dietary: "pescatarian",
     spicyLevel: 1,
     isFeatured: true,
@@ -221,7 +221,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Arborio rice cooked with forest mushrooms, white wine, and Parmigiano, stirred to a creamy finish.",
     price: 420,
-    image: "/images/risotto.jpg",
+    image: "/images/mushroom-risotto.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,
@@ -260,7 +260,7 @@ export const MENU_ITEMS: MenuItem[] = [
     name: "Tandoori Roti",
     description: "Hand-rolled whole wheat flatbread baked in a clay tandoor.",
     price: 70,
-    image: "/images/roti.jpg",
+    image: "/images/tandoori-roti.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,
@@ -298,7 +298,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Fluffy stuffed bread filled with spiced potato and cottage cheese, brushed with herb butter.",
     price: 150,
-    image: "/images/kulcha.jpg",
+    image: "/images/stuffed-kulcha.jpg",
     dietary: "vegetarian",
     spicyLevel: 1,
     isFeatured: true,
@@ -337,7 +337,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Layered basmati rice with spiced chicken, caramelized onions, saffron, and fresh herbs.",
     price: 380,
-    image: "/images/biryani.jpg",
+    image: "/images/chicken-biryani.jpg",
     dietary: "non-vegetarian",
     spicyLevel: 1,
     isFeatured: true,
@@ -356,7 +356,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Fragrant basmati rice cooked with garden vegetables, tempered cumin, and whole spices.",
     price: 220,
-    image: "/images/pulao.jpg",
+    image: "/images/vegetable-pulao.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,
@@ -452,7 +452,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Crispy chicken fritters tossed in a bold, tangy Sichuan-style sauce.",
     price: 340,
-    image: "/images/manchurian.jpg",
+    image: "/images/chicken-manchurian.jpg",
     dietary: "non-vegetarian",
     spicyLevel: 2,
     isFeatured: true,
@@ -471,7 +471,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Steamed dumplings filled with cabbage, carrots, and spring onion, served with chili-soy dip.",
     price: 220,
-    image: "/images/momos.jpg",
+    image: "/images/veg-momos.jpg",
     dietary: "vegetarian",
     spicyLevel: 1,
     isFeatured: false,
@@ -530,7 +530,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Cooling cumin-mint cooler spiced with black salt and fresh coriander.",
     price: 120,
-    image: "/images/jaljeera.jpg",
+    image: "/images/mint-jaljeera.jpg",
     dietary: "vegan",
     spicyLevel: 0,
     isFeatured: true,
@@ -549,7 +549,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "House-made cola infused with ginger, cardamom, and a hint of lime.",
     price: 140,
-    image: "/images/cola.jpg",
+    image: "/images/masala-cola.jpg",
     dietary: "vegan",
     spicyLevel: 0,
     isFeatured: false,
@@ -568,7 +568,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Slow-steeped single-origin beans, served over ice with a splash of milk.",
     price: 200,
-    image: "/images/cold-brew.jpg",
+    image: "/images/cold-brew-coffee.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,
@@ -645,7 +645,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Warm dark chocolate cake with a flowing salted-caramel heart, served with vanilla.",
     price: 280,
-    image: "/images/lava-cake.jpg",
+    image: "/images/molten-chocolate-lava-cake.jpg",
     dietary: "eggetarian",
     spicyLevel: 0,
     isFeatured: true,
@@ -664,7 +664,7 @@ export const MENU_ITEMS: MenuItem[] = [
     description:
       "Rich saffron kulfi swirled with rose, studded with pistachio, served with fresh mango.",
     price: 200,
-    image: "/images/kulfi.jpg",
+    image: "/images/paan-kulfi.jpg",
     dietary: "vegetarian",
     spicyLevel: 0,
     isFeatured: false,

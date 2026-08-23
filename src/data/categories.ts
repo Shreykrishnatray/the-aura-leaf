@@ -1,6 +1,6 @@
 import type { MenuCategory } from "@/types";
 
-export const CATEGORIES: MenuCategory[] = [
+export const CATEGORIES: readonly MenuCategory[] = [
   {
     id: "cat-starters",
     slug: "starters",

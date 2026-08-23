@@ -58,7 +58,7 @@ function order(
       status === "PENDING" || status === "ACCEPTED" || status === "PREPARING"
         ? new Date(now + (it.preparationTime + 8) * 60 * 1000).toISOString()
         : null,
-    servedAt: status === "SERVED" || status === "COMPLETED" ? d.toISOString() : null,
+    servedAt: status === "SERVED" ? d.toISOString() : null,
   };
 }
 
