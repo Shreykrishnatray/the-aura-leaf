@@ -12,6 +12,7 @@ import { HeaderNav } from "@/components/header-nav";
 import { useApp } from "@/providers/app-provider";
 import { RESTAURANT } from "@/data/restaurant";
 import { formatCurrency } from "@/lib/format";
+import { ORDER_STATUS_LABELS } from "@/config/constants";
 
 export default function BillPage() {
   const router = useRouter();
@@ -155,7 +156,7 @@ export default function BillPage() {
                   }
                   className="text-[10px]"
                 >
-                  {order.status}
+                  {ORDER_STATUS_LABELS[order.status]}
                 </Badge>
               </div>
               <div className="space-y-1">

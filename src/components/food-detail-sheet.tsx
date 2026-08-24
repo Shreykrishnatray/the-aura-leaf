@@ -75,7 +75,12 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
       };
     });
 
+  const hasUnselectedRequired = item.modifiers.some(
+    (mod) => mod.required && (selectedMods[mod.id] || []).length === 0
+  );
+
   const handleAdd = () => {
+    if (hasUnselectedRequired) return;
     addItemToCart(item, quantity, customizations, instructions);
     onClose();
   };
@@ -230,8 +235,8 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <Button onClick={handleAdd} className="flex-1 h-12 text-base" size="lg">
-                    Add to Cart — {formatCurrency((item.price + customizationPrice) * quantity, RESTAURANT.currency)}
+                  <Button onClick={handleAdd} disabled={hasUnselectedRequired} className="flex-1 h-12 text-base" size="lg">
+                    {hasUnselectedRequired ? "Select required options" : `Add to Cart — ${formatCurrency((item.price + customizationPrice) * quantity, RESTAURANT.currency)}`}
                   </Button>
                 </div>
               </div>
