@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Minus, Plus, Flame, Leaf } from "lucide-react";
+import { X, ArrowLeft, Minus, Plus, Flame, Leaf } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -146,6 +146,13 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
               </div>
 
               <div className="p-5 pb-28 sm:pb-6">
+                <button
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-charcoal transition-colors mb-3 -ml-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to menu
+                </button>
                 <h2 className="font-display text-2xl font-medium text-charcoal mb-1">{item.name}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">{item.description}</p>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">

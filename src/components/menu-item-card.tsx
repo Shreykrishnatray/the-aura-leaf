@@ -27,16 +27,16 @@ export function MenuItemCard({ item, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className="group flex w-full text-left gap-4 rounded-xl border border-stone/80 bg-white p-3 transition-all duration-200 hover:shadow-md hover:border-sage/60 active:scale-[0.98]"
+      className="group flex w-full text-left gap-4 rounded-xl border border-stone/80 bg-white p-3.5 transition-all duration-200 hover:shadow-md hover:border-sage/60 active:scale-[0.98]"
       disabled={!item.available}
     >
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-stone/20">
+      <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-stone/20">
         <Image
           src={item.image}
           alt={item.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="96px"
+          sizes="112px"
         />
         {!item.available && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-medium text-white">
