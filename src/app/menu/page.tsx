@@ -71,16 +71,27 @@ function MenuContent() {
     <div className="min-h-screen bg-cream">
       <HeaderNav />
 
-      {/* Hero / Header — Two-sided composition */}
-      <section className="relative overflow-hidden bg-charcoal">
-        <div className="absolute inset-0 opacity-15">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(42,93,68,0.5),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(201,166,107,0.25),transparent_50%)]" />
+      {/* Hero / Header — Full-bleed cinematic food hero */}
+      <section className="relative h-[380px] sm:h-[460px] md:h-[520px] lg:h-[600px] overflow-hidden">
+        {/* Full-bleed background image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero-pizza.jpg"
+            alt="Premium artisan vegetable pizza at The Aura Leaf"
+            fill
+            className="object-cover object-center sm:object-right"
+            sizes="100vw"
+            priority
+          />
         </div>
 
-        <div className="relative mx-auto max-w-6xl flex flex-col lg:flex-row items-center gap-0">
-          {/* LEFT: Text */}
-          <div className="flex-1 px-6 pt-8 pb-10 lg:pt-14 lg:pb-14 lg:pl-10 z-10 text-left">
+        {/* Cinematic gradient overlays for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10" />
+
+        {/* Text content overlay */}
+        <div className="relative h-full flex flex-col justify-center z-20 px-6 sm:px-8 md:px-12 lg:pl-16">
+          <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-4">
               <Leaf className="h-4 w-4 text-sage" strokeWidth={1.8} />
               <span className="text-[11px] uppercase tracking-[0.25em] text-sage font-medium">Digital Dining</span>
@@ -104,23 +115,10 @@ function MenuContent() {
               <span>You&apos;re dining with us</span>
             </div>
           </div>
-
-          {/* RIGHT: Food Image */}
-          <div className="relative w-full lg:w-[55%] h-56 sm:h-64 md:h-80 lg:h-[26rem] flex-shrink-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-charcoal via-charcoal/60 to-transparent z-10 lg:block hidden" />
-            <div className="absolute inset-0 bg-gradient-to-b from-charcoal via-transparent to-charcoal z-10 lg:hidden" />
-            <Image
-              src="/images/hero.jpg"
-              alt="Premium wood-fired pizza at The Aura Leaf"
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 1024px) 100vw, 55vw"
-              priority
-            />
-          </div>
         </div>
 
-        <div className="h-6 bg-cream rounded-t-[2rem] relative z-10" />
+        {/* Bottom curved transition to cream background */}
+        <div className="absolute bottom-0 left-0 right-0 h-6 bg-cream rounded-t-[2rem] z-30" />
       </section>
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -141,7 +139,8 @@ function MenuContent() {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-charcoal"
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-charcoal hover:bg-stone/40 transition-colors"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -164,10 +163,12 @@ function MenuContent() {
                   className="flex-shrink-0 w-40 rounded-xl border border-stone bg-white p-2 text-left transition-all hover:shadow-md active:scale-[0.98]"
                 >
                   <div className="relative h-28 w-full overflow-hidden rounded-lg bg-stone/20 mb-2">
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="160px"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     <span className="absolute bottom-1.5 right-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-charcoal">
@@ -175,7 +176,7 @@ function MenuContent() {
                     </span>
                   </div>
                   <h3 className="font-display text-sm font-medium text-charcoal truncate">{item.name}</h3>
-                  <p className="text-[10px] text-muted-foreground truncate">{item.description}</p>
+                  <p className="text-xs text-muted-foreground truncate">{item.description}</p>
                 </button>
               ))}
             </div>

@@ -98,7 +98,7 @@ export default function SuccessPage() {
             Done
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             We hope to see you again soon.
           </p>
         </motion.div>

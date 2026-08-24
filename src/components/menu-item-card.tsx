@@ -45,7 +45,7 @@ export function MenuItemCard({ item, onClick }: Props) {
         )}
         {item.isPopular && (
           <div className="absolute top-1.5 left-1.5">
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-forest-dark">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-forest-dark" aria-label="Popular dish">
               <Star className="h-2.5 w-2.5 fill-current" />
             </span>
           </div>

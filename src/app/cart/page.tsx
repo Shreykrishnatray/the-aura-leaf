@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Leaf } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -39,7 +39,8 @@ export default function CartPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.push(tableNumber ? `/menu?table=${tableNumber}` : "/menu")}
-            className="rounded-full p-2 hover:bg-stone/40 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-stone/40 transition-colors"
+            aria-label="Back to menu"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -81,13 +82,6 @@ export default function CartPage() {
                   >
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-stone/20">
                       <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                      {(item.customizations.length === 0 || true) && (
-                        <div className="absolute top-1 left-1">
-                          <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm border border-green-600 bg-white">
-                            <Leaf className="h-2 w-2 text-green-600" />
-                          </span>
-                        </div>
-                      )}
                     </div>
                     <div className="flex flex-1 justify-between min-w-0">
                       <div className="min-w-0">
@@ -109,26 +103,26 @@ export default function CartPage() {
                       <div className="flex flex-col items-end justify-between">
                         <button
                           onClick={() => removeCartItem(item.id)}
-                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           aria-label="Remove item"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                         <div className="flex items-center rounded-full border border-stone">
                           <button
                             onClick={() => updateCartItemQty(item.id, item.quantity - 1)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone/40"
+                            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-stone/40"
                             aria-label="Decrease"
                           >
-                            <Minus className="h-3 w-3" />
+                            <Minus className="h-3.5 w-3.5" />
                           </button>
-                          <span className="w-6 text-center text-xs font-medium tabular-nums">{item.quantity}</span>
+                          <span className="w-7 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
                           <button
                             onClick={() => updateCartItemQty(item.id, item.quantity + 1)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone/40"
+                            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-stone/40"
                             aria-label="Increase"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
@@ -160,7 +154,7 @@ export default function CartPage() {
                   <span>{formatCurrency(total, RESTAURANT.currency)}</span>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-3">
+              <p className="text-xs text-muted-foreground mt-3">
                 Payment is made once at the end of your dining experience.
               </p>
             </div>

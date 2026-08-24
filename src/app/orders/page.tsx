@@ -159,7 +159,8 @@ export default function OrdersPage() {
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.push(tableNumber ? `/menu?table=${tableNumber}` : "/menu")}
-              className="rounded-full p-2 hover:bg-stone/40 transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-stone/40 transition-colors"
+              aria-label="Back to menu"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -193,7 +194,8 @@ export default function OrdersPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.push(tableNumber ? `/menu?table=${tableNumber}` : "/menu")}
-            className="rounded-full p-2 hover:bg-stone/40 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-stone/40 transition-colors"
+            aria-label="Back to menu"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>

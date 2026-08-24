@@ -32,6 +32,15 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
     }
   }, [open, item]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
   if (!item) return null;
 
   const toggleMod = (modId: string, optionId: string, type: "single" | "multiple") => {
@@ -83,7 +92,7 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
           <motion.div
@@ -91,7 +100,10 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card shadow-2xl sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:max-w-lg sm:w-full"
+            role="dialog"
+            aria-modal="true"
+            aria-label={item.name}
+            className="fixed inset-x-0 bottom-0 z-[60] mx-auto max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card shadow-2xl sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:max-w-lg sm:w-full"
           >
             <div className="relative">
               <div className="relative h-64 w-full overflow-hidden rounded-t-3xl sm:rounded-t-2xl">
@@ -105,10 +117,10 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <button
                   onClick={onClose}
-                  className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-charcoal shadow-md backdrop-blur-sm transition-colors hover:bg-white"
+                  className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-md backdrop-blur-sm transition-colors hover:bg-white"
                   aria-label="Close"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center gap-2 mb-1">
@@ -165,7 +177,8 @@ export function FoodDetailSheet({ item, open, onClose }: Props) {
                           <button
                             key={opt.id}
                             onClick={() => toggleMod(mod.id, opt.id, mod.type)}
-                            className={`rounded-full px-3 py-1.5 text-sm border transition-all ${
+                            aria-pressed={selected}
+                            className={`rounded-full px-4 py-2 text-sm border transition-all min-h-[44px] ${
                               selected
                                 ? "border-forest bg-forest text-white"
                                 : "border-stone bg-card text-charcoal hover:border-forest/50"

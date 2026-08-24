@@ -51,7 +51,8 @@ export default function PaymentPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.push(tableNumber ? `/bill?table=${tableNumber}` : "/bill")}
-            className="rounded-full p-2 hover:bg-stone/40 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-stone/40 transition-colors"
+            aria-label="Back to bill"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -89,6 +90,7 @@ export default function PaymentPage() {
               <button
                 key={method.id}
                 onClick={() => setSelectedMethod(method.id)}
+                aria-pressed={selected}
                 className={cn(
                   "flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all",
                   selected

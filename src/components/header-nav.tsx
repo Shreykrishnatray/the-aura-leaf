@@ -34,6 +34,7 @@ export function HeaderNav() {
               <Link
                 key={nav.href}
                 href={tableNumber ? `${nav.href}?table=${tableNumber}` : nav.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "relative rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                   isActive ? "bg-forest/10 text-forest" : "text-charcoal hover:bg-stone/40"
@@ -41,8 +42,8 @@ export function HeaderNav() {
               >
                 {nav.label}
                 {nav.label === "Cart" && cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-forest-dark">
-                    {cartCount}
+                  <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-forest-dark">
+                    {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
               </Link>

@@ -28,6 +28,7 @@ export function MobileNav() {
             <Link
               key={nav.href}
               href={tableNumber ? `${nav.href}?table=${tableNumber}` : nav.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 transition-colors",
                 isActive ? "text-forest" : "text-muted-foreground"
@@ -36,8 +37,8 @@ export function MobileNav() {
               <div className="relative">
                 <nav.icon className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.8} />
                 {nav.label === "Cart" && cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[9px] font-bold text-forest-dark">
-                    {cartCount}
+                  <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-forest-dark">
+                    {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
               </div>
