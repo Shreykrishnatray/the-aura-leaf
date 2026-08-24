@@ -31,7 +31,6 @@ export const RESTAURANT: Restaurant = {
   },
   taxes: [
     { id: "gst-5", name: "GST (5%)", rate: 5, type: "percentage" },
-    { id: "gst-18", name: "GST (18%)", rate: 18, type: "percentage" },
   ],
   serviceCharge: 10,
 };

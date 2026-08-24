@@ -24,12 +24,12 @@ export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (!session || session.orders.length === 0) {
+    if (!session || session.orders.length === 0 || session.status === "COMPLETED") {
       router.replace(tableNumber ? `/menu?table=${tableNumber}` : "/menu");
     }
   }, [session, router, tableNumber]);
 
-  if (!session || session.orders.length === 0) {
+  if (!session || session.orders.length === 0 || session.status === "COMPLETED") {
     return null;
   }
 

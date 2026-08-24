@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Receipt, AlertCircle, CreditCard } from "lucide-react";
+import { ArrowLeft, Receipt, AlertCircle, CreditCard, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +107,42 @@ export default function BillPage() {
           </motion.div>
         )}
 
+        {session.status === "PAYMENT_PENDING" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl bg-info/10 border border-info/20 p-4"
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-info" />
+              <div>
+                <p className="text-sm font-medium text-charcoal">Payment Pending</p>
+                <p className="text-xs text-muted-foreground">
+                  Please complete your payment to finish the dining experience.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {session.status === "COMPLETED" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl bg-success/10 border border-success/20 p-4"
+          >
+            <div className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-success" />
+              <div>
+                <p className="text-sm font-medium text-charcoal">Payment Completed</p>
+                <p className="text-xs text-muted-foreground">
+                  Thank you for dining with The Aura Leaf.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Orders */}
         <div className="space-y-3 mb-6">
           {session.orders.map((order) => (
@@ -186,7 +222,7 @@ export default function BillPage() {
           </Button>
         )}
 
-        {session.status === "BILL_REQUESTED" && (
+        {(session.status === "BILL_REQUESTED" || session.status === "PAYMENT_PENDING") && (
           <Button
             onClick={() => router.push(`/payment?table=${session.tableNumber}`)}
             className="w-full h-12 text-base"

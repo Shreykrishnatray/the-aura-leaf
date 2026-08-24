@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Leaf, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -13,7 +13,15 @@ import { APP_NAME } from "@/config/constants";
 
 export default function SuccessPage() {
   const router = useRouter();
-  const { session, resetSession, tableNumber } = useApp();
+  const { session, resetSession, completePayment, tableNumber } = useApp();
+  const hasCompleted = useRef(false);
+
+  useEffect(() => {
+    if (session?.status === "PAYMENT_PENDING" && !hasCompleted.current) {
+      hasCompleted.current = true;
+      completePayment();
+    }
+  }, [session?.status, completePayment]);
 
   const total = session
     ? session.orders.reduce((sum, o) => sum + o.total, 0)
@@ -23,6 +31,20 @@ export default function SuccessPage() {
     resetSession();
     router.push("/");
   };
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="font-display text-2xl font-medium text-charcoal mb-2">No Active Session</h1>
+          <p className="text-sm text-muted-foreground mb-6">Start a new dining experience from the menu.</p>
+          <Button onClick={() => router.push("/")} size="lg">
+            Go to Menu
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">

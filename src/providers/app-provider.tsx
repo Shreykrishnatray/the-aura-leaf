@@ -23,6 +23,7 @@ interface AppContextValue extends AppState {
   advanceOrderStatus: (orderId: string) => void;
   requestBill: () => void;
   processPayment: () => void;
+  completePayment: () => void;
   resetSession: () => void;
   setDemoMode: (v: boolean) => void;
 }
@@ -91,9 +92,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const placeOrder = useCallback((): DiningSession | null => {
-    if (!state.session || state.cart.length === 0) return null;
-    const orderItems = cartStore.cartToOrderItems(state.cart);
-    const updated = sessionStore.addOrderToSession(state.session, orderItems);
+    const currentSession = state.session;
+    const currentCart = state.cart;
+    if (!currentSession || currentCart.length === 0) return null;
+    const orderItems = cartStore.cartToOrderItems(currentCart);
+    const updated = sessionStore.addOrderToSession(currentSession, orderItems);
     cartStore.clearCart();
     setState((s) => ({ ...s, session: updated, cart: [] }));
     return updated;
@@ -126,6 +129,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, session: updated }));
   }, [state.session]);
 
+  const completePayment = useCallback(() => {
+    if (!state.session) return;
+    const updated = sessionStore.updateSessionStatus(state.session, "COMPLETED");
+    setState((s) => ({ ...s, session: updated }));
+  }, [state.session]);
+
   const resetSession = useCallback(() => {
     sessionStore.clearSession();
     cartStore.clearCart();
@@ -149,6 +158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         advanceOrderStatus,
         requestBill,
         processPayment,
+        completePayment,
         resetSession,
         setDemoMode,
       }}

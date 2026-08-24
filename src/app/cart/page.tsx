@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,7 @@ import { APP_NAME } from "@/config/constants";
 export default function CartPage() {
   const router = useRouter();
   const { cart, updateCartItemQty, removeCartItem, placeOrder, tableNumber } = useApp();
+  const orderingRef = useRef(false);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const taxRate = RESTAURANT.taxes.reduce((sum, t) => sum + t.rate, 0);
@@ -24,9 +25,13 @@ export default function CartPage() {
   const total = subtotal + taxAmount + serviceCharge;
 
   const handlePlaceOrder = () => {
+    if (orderingRef.current) return;
+    orderingRef.current = true;
     const session = placeOrder();
     if (session) {
       router.push(`/orders?table=${session.tableNumber}`);
+    } else {
+      orderingRef.current = false;
     }
   };
 
