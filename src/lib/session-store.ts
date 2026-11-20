@@ -1,15 +1,11 @@
 "use client";
 
-import type { DiningSession, Order, OrderItem, OrderStatus, SessionStatus } from "@/types";
+import type { DiningSession, Order, SessionStatus } from "@/types";
 import { STORAGE_KEYS } from "@/config/constants";
 import { RESTAURANT } from "@/data/restaurant";
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-function generateOrderId(): string {
-  return `OR-${1000 + Math.floor(Math.random() * 9000)}`;
 }
 
 function generateSessionId(): string {
@@ -69,56 +65,44 @@ export function createSession(tableNumber: string): DiningSession {
   return session;
 }
 
-export function addOrderToSession(session: DiningSession, items: OrderItem[]): DiningSession {
+export function addOrderToSession(session: DiningSession, order: Order): DiningSession {
   const now = new Date().toISOString();
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-  const taxRate = RESTAURANT.taxes.reduce((sum, t) => sum + t.rate, 0);
-  const taxAmount = Math.round((subtotal * taxRate) / 100);
-  const serviceCharge = Math.round((subtotal * RESTAURANT.serviceCharge) / 100);
-  const total = subtotal + taxAmount + serviceCharge;
-
-  const order: Order = {
-    id: generateOrderId(),
-    sessionId: session.id,
-    status: "PENDING",
-    items,
-    subtotal,
-    taxAmount,
-    serviceCharge,
-    total,
-    notes: "",
-    createdAt: now,
-    updatedAt: now,
-    estimatedReadyAt: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
-    servedAt: null,
-  };
-
   const updated: DiningSession = {
     ...session,
     orders: [...session.orders, order],
-    runningTotal: session.runningTotal + total,
+    runningTotal: session.runningTotal + order.total,
     updatedAt: now,
   };
   saveSession(updated);
   return updated;
 }
 
-export function updateOrderStatus(session: DiningSession, orderId: string, status: OrderStatus): DiningSession {
-  const now = new Date().toISOString();
-  const updatedOrders = session.orders.map((o) =>
-    o.id === orderId
-      ? {
-          ...o,
-          status,
-          updatedAt: now,
-          servedAt: status === "SERVED" ? now : o.servedAt,
-        }
-      : o
-  );
+/** Replaces a local order with the database copy (e.g. after a status change). */
+export function applyServerOrder(session: DiningSession, order: Order): DiningSession {
   const updated: DiningSession = {
     ...session,
-    orders: updatedOrders,
-    updatedAt: now,
+    orders: session.orders.map((existing) => (existing.id === order.id ? order : existing)),
+    updatedAt: new Date().toISOString(),
+  };
+  saveSession(updated);
+  return updated;
+}
+
+/**
+ * Merges orders loaded from the API into the locally cached session.
+ * Server copies win for matching ids; local-only orders are kept so a
+ * temporarily unavailable API never wipes the user's screen.
+ */
+export function mergeOrdersFromServer(session: DiningSession, orders: Order[]): DiningSession {
+  const byId = new Map(session.orders.map((order) => [order.id, order]));
+  for (const order of orders) byId.set(order.id, order);
+  const merged = [...byId.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+  const updated: DiningSession = {
+    ...session,
+    orders: merged,
+    runningTotal: merged.reduce((sum, order) => sum + order.total, 0),
+    updatedAt: new Date().toISOString(),
   };
   saveSession(updated);
   return updated;

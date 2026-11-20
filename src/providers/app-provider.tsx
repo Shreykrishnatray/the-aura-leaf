@@ -1,16 +1,18 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import type { DiningSession, OrderStatus, SessionStatus, OrderItem, Customization } from "@/types";
+import type { DiningSession, Order, OrderStatus, Customization } from "@/types";
 import type { CartItem } from "@/lib/cart-store";
 import * as sessionStore from "@/lib/session-store";
 import * as cartStore from "@/lib/cart-store";
+import { patchOrderStatus, submitOrder } from "@/lib/order-api";
 
 interface AppState {
   session: DiningSession | null;
   cart: CartItem[];
   tableNumber: string | null;
   demoMode: boolean;
+  orderError: string | null;
 }
 
 interface AppContextValue extends AppState {
@@ -19,8 +21,10 @@ interface AppContextValue extends AppState {
   updateCartItemQty: (itemId: string, quantity: number) => void;
   removeCartItem: (itemId: string) => void;
   emptyCart: () => void;
-  placeOrder: () => DiningSession | null;
-  advanceOrderStatus: (orderId: string) => void;
+  placeOrder: () => Promise<DiningSession | null>;
+  advanceOrderStatus: (orderId: string) => Promise<void>;
+  syncOrders: (orders: Order[]) => void;
+  clearOrderError: () => void;
   requestBill: () => void;
   processPayment: () => void;
   completePayment: () => void;
@@ -36,6 +40,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     cart: [],
     tableNumber: null,
     demoMode: true,
+    orderError: null,
   });
 
   useEffect(() => {
@@ -91,31 +96,86 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, cart: [] }));
   }, []);
 
-  const placeOrder = useCallback((): DiningSession | null => {
+  const placeOrder = useCallback(async (): Promise<DiningSession | null> => {
     const currentSession = state.session;
     const currentCart = state.cart;
     if (!currentSession || currentCart.length === 0) return null;
-    const orderItems = cartStore.cartToOrderItems(currentCart);
-    const updated = sessionStore.addOrderToSession(currentSession, orderItems);
-    cartStore.clearCart();
-    setState((s) => ({ ...s, session: updated, cart: [] }));
-    return updated;
+
+    try {
+      const order = await submitOrder({
+        sessionId: currentSession.id,
+        sessionIdentifier: currentSession.sessionIdentifier,
+        tableNumber: currentSession.tableNumber,
+        notes: "",
+        items: currentCart.map((item) => ({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity,
+          specialInstructions: item.specialInstructions,
+          customizations: item.customizations.map((customization) => ({
+            modifierId: customization.modifierId,
+            optionIds: customization.optionIds,
+          })),
+        })),
+      });
+
+      const updated = sessionStore.addOrderToSession(currentSession, order);
+      cartStore.clearCart();
+      setState((s) => ({ ...s, session: updated, cart: [], orderError: null }));
+      return updated;
+    } catch (error) {
+      setState((s) => ({
+        ...s,
+        orderError:
+          error instanceof Error
+            ? error.message
+            : "We couldn't place your order. Please try again.",
+      }));
+      return null;
+    }
   }, [state.session, state.cart]);
 
   const advanceOrderStatus = useCallback(
-    (orderId: string) => {
-      if (!state.session) return;
-      const order = state.session.orders.find((o) => o.id === orderId);
+    async (orderId: string) => {
+      const currentSession = state.session;
+      if (!currentSession) return;
+
+      const order = currentSession.orders.find((o) => o.id === orderId);
       if (!order) return;
+
       const flow: OrderStatus[] = ["PENDING", "ACCEPTED", "PREPARING", "READY", "SERVED"];
       const idx = flow.indexOf(order.status);
       if (idx < 0 || idx >= flow.length - 1) return;
-      const next = flow[idx + 1];
-      const updated = sessionStore.updateOrderStatus(state.session, orderId, next);
-      setState((s) => ({ ...s, session: updated }));
+
+      try {
+        const serverOrder = await patchOrderStatus(orderId, flow[idx + 1]);
+        setState((s) => {
+          if (!s.session) return s;
+          return { ...s, session: sessionStore.applyServerOrder(s.session, serverOrder), orderError: null };
+        });
+      } catch (error) {
+        setState((s) => ({
+          ...s,
+          orderError:
+            error instanceof Error
+              ? error.message
+              : "We couldn't update the order status.",
+        }));
+      }
     },
     [state.session]
   );
+
+  const syncOrders = useCallback((orders: Order[]) => {
+    if (orders.length === 0) return;
+    setState((s) => {
+      if (!s.session) return s;
+      return { ...s, session: sessionStore.mergeOrdersFromServer(s.session, orders) };
+    });
+  }, []);
+
+  const clearOrderError = useCallback(() => {
+    setState((s) => (s.orderError === null ? s : { ...s, orderError: null }));
+  }, []);
 
   const requestBill = useCallback(() => {
     if (!state.session) return;
@@ -138,7 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const resetSession = useCallback(() => {
     sessionStore.clearSession();
     cartStore.clearCart();
-    setState({ session: null, cart: [], tableNumber: null, demoMode: true });
+    setState({ session: null, cart: [], tableNumber: null, demoMode: true, orderError: null });
   }, []);
 
   const setDemoMode = useCallback((v: boolean) => {
@@ -156,6 +216,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         emptyCart,
         placeOrder,
         advanceOrderStatus,
+        syncOrders,
+        clearOrderError,
         requestBill,
         processPayment,
         completePayment,

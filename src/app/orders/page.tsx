@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { MobileNav } from "@/components/mobile-nav";
 import { HeaderNav } from "@/components/header-nav";
 import { useApp } from "@/providers/app-provider";
+import { fetchSessionOrders } from "@/lib/order-api";
 import { RESTAURANT } from "@/data/restaurant";
 import { formatCurrency } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/config/constants";
@@ -135,7 +136,7 @@ function OrderCard({
           <Button
             size="sm"
             variant="soft"
-            onClick={() => advanceOrderStatus(orderId)}
+            onClick={() => void advanceOrderStatus(orderId)}
             className="text-xs"
           >
             Simulate: {ORDER_STATUS_LABELS[STATUS_FLOW[currentIdx + 1]]}
@@ -149,7 +150,27 @@ function OrderCard({
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { session, tableNumber } = useApp();
+  const { session, tableNumber, syncOrders } = useApp();
+  const sessionId = session?.id;
+
+  // Pull the latest order statuses from MySQL so kitchen-side updates show up
+  // even if this browser has a stale copy cached in localStorage.
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+
+    fetchSessionOrders(sessionId)
+      .then((orders) => {
+        if (!cancelled) syncOrders(orders);
+      })
+      .catch(() => {
+        // Keep the locally cached orders if the API is temporarily unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, syncOrders]);
 
   if (!session || session.orders.length === 0) {
     return (

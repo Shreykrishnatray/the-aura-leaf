@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,8 +15,9 @@ import { APP_NAME } from "@/config/constants";
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, updateCartItemQty, removeCartItem, placeOrder, tableNumber } = useApp();
+  const { cart, updateCartItemQty, removeCartItem, placeOrder, tableNumber, orderError, clearOrderError } = useApp();
   const orderingRef = useRef(false);
+  const [placing, setPlacing] = useState(false);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const taxRate = RESTAURANT.taxes.reduce((sum, t) => sum + t.rate, 0);
@@ -24,15 +25,18 @@ export default function CartPage() {
   const serviceCharge = Math.round((subtotal * RESTAURANT.serviceCharge) / 100);
   const total = subtotal + taxAmount + serviceCharge;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (orderingRef.current) return;
     orderingRef.current = true;
-    const session = placeOrder();
+    clearOrderError();
+    setPlacing(true);
+    const session = await placeOrder();
     if (session) {
       router.push(`/orders?table=${session.tableNumber}`);
-    } else {
-      orderingRef.current = false;
+      return;
     }
+    orderingRef.current = false;
+    setPlacing(false);
   };
 
   return (
@@ -164,8 +168,19 @@ export default function CartPage() {
               </p>
             </div>
 
-            <Button onClick={handlePlaceOrder} className="w-full h-12 text-base mt-4" size="lg">
-              Place Order
+            {orderError && (
+              <p className="mt-4 text-sm text-destructive text-center" role="alert">
+                {orderError}
+              </p>
+            )}
+
+            <Button
+              onClick={handlePlaceOrder}
+              disabled={placing}
+              className="w-full h-12 text-base mt-4"
+              size="lg"
+            >
+              {placing ? "Placing order…" : "Place Order"}
             </Button>
           </>
         )}

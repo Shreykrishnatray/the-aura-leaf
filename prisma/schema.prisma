@@ -1,0 +1,333 @@
+// THE AURA LEAF — Prisma schema
+//
+// Phase 2: restaurant + menu catalogue (categories, items, modifiers) + tables.
+// Phase 3: dining sessions, orders, order items and item customizations.
+// Phase 4: bills and payments (the admin dashboard reads these tables).
+
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+model Restaurant {
+  id             String  @id
+  name           String
+  tagline        String
+  description    String  @db.Text
+  address        String  @db.Text
+  phone          String
+  email          String
+  latitude       Float
+  longitude      Float
+  currencyCode   String
+  currencySymbol String
+  currencyLocale String
+  primaryImage   String
+  logo           String?
+  serviceCharge  Int     @default(0)
+
+  hours    RestaurantHour[]
+  taxes    Tax[]
+  sessions DiningSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RestaurantHour {
+  id           String     @id @default(cuid())
+  restaurantId String
+  label        String
+  value        String
+  sortOrder    Int        @default(0)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, label])
+  @@index([restaurantId])
+}
+
+model Tax {
+  id           String     @id
+  restaurantId String
+  name         String
+  rate         Int
+  // "percentage" | "fixed"
+  type         String     @default("percentage")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+model Category {
+  id          String     @id
+  slug        String     @unique
+  name        String
+  description String     @db.Text
+  image       String?
+  sortOrder   Int        @default(0)
+  items       MenuItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MenuItem {
+  id              String  @id
+  slug            String  @unique
+  name            String
+  description     String  @db.Text
+  price           Int
+  image           String
+  // "vegetarian" | "vegan" | "non-vegetarian" | "eggetarian" | "pescatarian"
+  dietary         String
+  spicyLevel      Int     @default(0)
+  isFeatured      Boolean @default(false)
+  isPopular       Boolean @default(false)
+  available       Boolean @default(true)
+  preparationTime Int
+  allergens       Json
+  servings        Int
+  sortOrder       Int     @default(0)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  modifiers  MenuItemModifier[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+model Modifier {
+  id       String  @id
+  name     String
+  // "single" | "multiple"
+  type     String
+  required Boolean @default(false)
+
+  options   ModifierOption[]
+  menuItems MenuItemModifier[]
+}
+
+model ModifierOption {
+  modifierId String
+  // Business-level option id (unique only within its modifier)
+  id         String
+  name       String
+  price      Int    @default(0)
+  sortOrder  Int    @default(0)
+
+  modifier Modifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+
+  @@id([modifierId, id])
+  @@index([modifierId])
+}
+
+model MenuItemModifier {
+  menuItemId String
+  modifierId String
+  sortOrder  Int    @default(0)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  modifier Modifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+
+  @@id([menuItemId, modifierId])
+  @@index([modifierId])
+}
+
+model RestaurantTable {
+  id        String  @id
+  number    String  @unique
+  name      String
+  capacity  Int
+  // "free" | "occupied" | "reserved" | "cleaning"
+  status    String  @default("free")
+  sessionId String?
+
+  sessions DiningSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — dining sessions & orders
+// ---------------------------------------------------------------------------
+
+model DiningSession {
+  id                String @id
+  restaurantId      String
+  tableId           String
+  // "ACTIVE" | "BILL_REQUESTED" | "PAYMENT_PENDING" | "COMPLETED" | "CANCELLED"
+  status            String @default("ACTIVE")
+  sessionIdentifier String @unique
+  runningTotal      Int    @default(0)
+
+  restaurantLat       Float
+  restaurantLng       Float
+  allowedRadiusMeters Int       @default(80)
+  customerLat         Float?
+  customerLng         Float?
+  validatedAt         DateTime?
+  // "pending" | "verified" | "unverified" | "denied" | "unavailable"
+  locationStatus      String    @default("pending")
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  table      RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  orders     Order[]
+  bill       Bill?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([restaurantId])
+  @@index([tableId])
+  @@index([status])
+}
+
+model Order {
+  id     String @id
+  // "PENDING" | "ACCEPTED" | "PREPARING" | "READY" | "SERVED" | "CANCELLED"
+  status String @default("PENDING")
+
+  subtotal      Int
+  taxAmount     Int
+  serviceCharge Int
+  total         Int
+
+  notes            String    @db.Text
+  estimatedReadyAt DateTime?
+  servedAt         DateTime?
+
+  sessionId String
+  session   DiningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  items     OrderItem[]
+  billOrder BillOrder?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  // Snapshot of the menu item at the time of ordering so history survives
+  // menu edits and price changes.
+  menuItemId String
+  name       String
+  image      String
+
+  unitPrice Int
+  quantity  Int
+  total     Int
+  sortOrder Int @default(0)
+
+  specialInstructions String @db.Text
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  customizations OrderItemCustomization[]
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model OrderItemCustomization {
+  id String @id @default(cuid())
+
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  modifierId   String
+  modifierName String
+
+  // JSON arrays of strings, e.g. ["extra_cheese", "extra_paneer"]
+  optionIds   Json
+  optionNames Json
+
+  price Int @default(0)
+
+  @@index([orderItemId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 — bills & payments
+// ---------------------------------------------------------------------------
+
+model Bill {
+  id String @id @default(cuid())
+
+  // One live bill per dining session; it is regenerated while unpaid.
+  sessionId String        @unique
+  session   DiningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // "pending" | "requested" | "paid" | "failed"
+  status String @default("requested")
+
+  subtotal      Int
+  taxAmount     Int
+  serviceCharge Int
+  total         Int
+
+  // JSON array of { name, amount } — the tax lines printed on the bill.
+  taxBreakdown Json
+  notes        String @db.Text
+
+  orders   BillOrder[]
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Records exactly which orders a bill was generated from, so later orders do
+// not silently change an already printed bill.
+model BillOrder {
+  billId  String
+  orderId String @unique
+
+  bill  Bill  @relation(fields: [billId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@id([billId, orderId])
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  billId String
+  bill   Bill   @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  amount        Int
+  // "card" | "upi" | "cash" | "wallet"
+  method        String
+  // "pending" | "succeeded" | "failed" | "refunded"
+  status        String    @default("pending")
+  provider      String    @default("demo")
+  transactionId String?   @unique
+  completedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([billId])
+  @@index([status])
+  @@index([createdAt])
+}

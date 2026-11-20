@@ -1,6 +1,6 @@
 "use client";
 
-import type { MenuItem, OrderItem, Customization } from "@/types";
+import type { MenuItem, Customization } from "@/types";
 import { STORAGE_KEYS } from "@/config/constants";
 import { RESTAURANT } from "@/data/restaurant";
 
@@ -76,20 +76,6 @@ export function removeFromCart(items: CartItem[], itemId: string): CartItem[] {
 
 export function clearCart(): void {
   saveCart([]);
-}
-
-export function cartToOrderItems(items: CartItem[]): OrderItem[] {
-  return items.map((item) => ({
-    id: generateCartId(),
-    menuItemId: item.menuItemId,
-    name: item.name,
-    image: item.image,
-    price: item.price,
-    quantity: item.quantity,
-    customizations: item.customizations,
-    specialInstructions: item.specialInstructions,
-    total: item.price * item.quantity,
-  }));
 }
 
 export function calculateCartTotals(items: CartItem[]) {

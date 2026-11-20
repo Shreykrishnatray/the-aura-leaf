@@ -6,8 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Search, X, Leaf, ChevronRight, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/providers/app-provider";
-import { CATEGORIES } from "@/data/categories";
-import { MENU_ITEMS, FEATURED_ITEMS } from "@/data/menu";
+import { fetchJson } from "@/lib/api-client";
 import { MenuItemCard } from "@/components/menu-item-card";
 import { FoodDetailSheet } from "@/components/food-detail-sheet";
 import { FloatingCart } from "@/components/floating-cart";
@@ -15,7 +14,9 @@ import { MobileNav } from "@/components/mobile-nav";
 import { HeaderNav } from "@/components/header-nav";
 import { Badge } from "@/components/ui/badge";
 import { APP_NAME, APP_TAGLINE } from "@/config/constants";
-import type { MenuItem } from "@/types";
+import type { MenuCategory, MenuItem } from "@/types";
+
+type LoadStatus = "loading" | "ready" | "error";
 
 function MenuContent() {
   const searchParams = useSearchParams();
@@ -28,12 +29,54 @@ function MenuContent() {
   const [detailOpen, setDetailOpen] = useState(false);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [status, setStatus] = useState<LoadStatus>("loading");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
   useEffect(() => {
     if (table) initSession(table);
   }, [table, initSession]);
 
+  // Catalogue comes from MySQL via the Phase 2 API routes.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCatalogue() {
+      setStatus("loading");
+      setErrorMessage(null);
+      try {
+        const [categoryData, itemData] = await Promise.all([
+          fetchJson<MenuCategory[]>("/api/categories"),
+          fetchJson<MenuItem[]>("/api/menu-items"),
+        ]);
+        if (cancelled) return;
+        setCategories(categoryData);
+        setMenuItems(itemData);
+        setStatus("ready");
+      } catch (error) {
+        if (cancelled) return;
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to reach the kitchen right now."
+        );
+        setStatus("error");
+      }
+    }
+
+    loadCatalogue();
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  const featuredItems = useMemo(
+    () => menuItems.filter((item) => item.isFeatured),
+    [menuItems]
+  );
+
   const filteredItems = useMemo(() => {
-    let items = MENU_ITEMS as readonly MenuItem[];
+    let items = menuItems;
     if (activeCategory) {
       items = items.filter((i) => i.categoryId === activeCategory);
     }
@@ -46,9 +89,9 @@ function MenuContent() {
       );
     }
     return items;
-  }, [activeCategory, search]);
+  }, [activeCategory, search, menuItems]);
 
-  const activeCat = CATEGORIES.find((c) => c.id === activeCategory);
+  const activeCat = categories.find((c) => c.id === activeCategory);
 
   const scrollToCategory = (catId: string) => {
     setActiveCategory(catId === activeCategory ? null : catId);
@@ -147,14 +190,14 @@ function MenuContent() {
         </div>
 
         {/* Featured Section */}
-        {!search && !activeCategory && (
+        {status === "ready" && !search && !activeCategory && featuredItems.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-medium text-charcoal">Chef&apos;s Specials</h2>
               <span className="text-xs text-muted-foreground uppercase tracking-wider">Curated</span>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-              {FEATURED_ITEMS.map((item) => (
+              {featuredItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => openDetail(item)}
@@ -182,42 +225,68 @@ function MenuContent() {
         )}
 
         {/* Category Navigation */}
-        <section className="mb-6 -mx-4 px-4">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => {
-                setActiveCategory(null);
-                setSearch("");
-              }}
-              className={cn(
-                "flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium border transition-all",
-                !activeCategory
-                  ? "bg-forest text-white border-forest"
-                  : "bg-white text-charcoal border-stone hover:border-forest/50"
-              )}
-            >
-              All
-            </button>
-            {CATEGORIES.map((cat) => (
+        {status === "ready" && (
+          <section className="mb-6 -mx-4 px-4">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               <button
-                key={cat.id}
-                onClick={() => scrollToCategory(cat.id)}
+                onClick={() => {
+                  setActiveCategory(null);
+                  setSearch("");
+                }}
                 className={cn(
-                  "flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap",
-                  activeCategory === cat.id
+                  "flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium border transition-all",
+                  !activeCategory
                     ? "bg-forest text-white border-forest"
                     : "bg-white text-charcoal border-stone hover:border-forest/50"
                 )}
               >
-                {cat.name}
+                All
               </button>
-            ))}
-          </div>
-        </section>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => scrollToCategory(cat.id)}
+                  className={cn(
+                    "flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap",
+                    activeCategory === cat.id
+                      ? "bg-forest text-white border-forest"
+                      : "bg-white text-charcoal border-stone hover:border-forest/50"
+                  )}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Menu Items */}
         <section className="pb-32">
-          {search ? (
+          {status === "loading" ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-forest border-t-transparent" />
+              <p className="mt-4 font-display text-lg text-charcoal">Setting the table&hellip;</p>
+              <p className="text-sm text-muted-foreground">Fetching today&apos;s menu from the kitchen.</p>
+            </div>
+          ) : status === "error" ? (
+            <div className="rounded-2xl border border-stone bg-white px-6 py-12 text-center shadow-sm">
+              <p className="font-display text-lg text-charcoal">We couldn&apos;t load the menu</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {errorMessage ?? "Please try again in a moment."}
+              </p>
+              <button
+                onClick={() => setReloadKey((key) => key + 1)}
+                className="mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-full bg-forest px-5 text-sm font-medium text-white transition-colors hover:bg-forest-dark"
+              >
+                Try again
+              </button>
+            </div>
+          ) : menuItems.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="font-display text-lg text-charcoal">The menu is being prepared</p>
+              <p className="mt-1 text-sm text-muted-foreground">Please check back in a moment.</p>
+            </div>
+          ) : search ? (
             <div>
               <p className="text-sm text-muted-foreground mb-4">
                 {filteredItems.length} {filteredItems.length === 1 ? "result" : "results"} for &ldquo;{search}&rdquo;
@@ -248,8 +317,8 @@ function MenuContent() {
             </div>
           ) : (
             <div className="space-y-10">
-              {CATEGORIES.map((cat) => {
-                const items = (MENU_ITEMS as readonly MenuItem[]).filter((i) => i.categoryId === cat.id);
+              {categories.map((cat) => {
+                const items = menuItems.filter((i) => i.categoryId === cat.id);
                 if (items.length === 0) return null;
                 return (
                   <div key={cat.id} ref={(el) => { categoryRefs.current[cat.id] = el; }}>
