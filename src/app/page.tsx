@@ -6,7 +6,8 @@ import { useEffect } from "react";
 export default function Home() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/menu?table=T12");
+    // Seeded database table numbers are numeric (e.g. "12"), not "T12".
+    router.replace("/menu?table=12");
   }, [router]);
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
