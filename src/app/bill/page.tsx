@@ -60,13 +60,12 @@ export default function BillPage() {
   const serviceCharge = session.orders.reduce((sum, o) => sum + o.serviceCharge, 0);
   const total = session.orders.reduce((sum, o) => sum + o.total, 0);
 
-  const handleRequestBill = () => {
+  const handleRequestBill = async () => {
     if (!confirming) {
       setConfirming(true);
       return;
     }
-    requestBill();
-    router.push(`/payment?table=${session.tableNumber}`);
+    try { const response = await fetch("/api/bills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: session.id }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Could not generate bill."); requestBill(); router.push(`/payment?table=${session.tableNumber}&billId=${payload.id}`); } catch (error) { setConfirming(false); window.alert(error instanceof Error ? error.message : "Unable to generate bill."); }
   };
 
   return (
