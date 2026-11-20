@@ -4,6 +4,10 @@ import type { DiningSession, Order, SessionStatus } from "@/types";
 import { STORAGE_KEYS } from "@/config/constants";
 import { RESTAURANT } from "@/data/restaurant";
 
+function normalizeTableNumber(value: string): string {
+  return value.trim().replace(/^T/i, "");
+}
+
 function generateId(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -18,8 +22,19 @@ export function loadSession(tableNumber: string): DiningSession | null {
     const raw = localStorage.getItem(STORAGE_KEYS.DINING_SESSION);
     if (!raw) return null;
     const session: DiningSession = JSON.parse(raw);
-    if (session.tableNumber === tableNumber && session.status !== "COMPLETED" && session.status !== "CANCELLED") {
-      return session;
+    const normalizedTable = normalizeTableNumber(tableNumber);
+    if (
+      normalizeTableNumber(session.tableNumber) === normalizedTable &&
+      session.status !== "COMPLETED" &&
+      session.status !== "CANCELLED"
+    ) {
+      const normalizedSession = {
+        ...session,
+        tableNumber: normalizedTable,
+        tableId: `t${normalizedTable}`,
+      };
+      saveSession(normalizedSession);
+      return normalizedSession;
     }
     return null;
   } catch {
@@ -39,12 +54,13 @@ export function clearSession(): void {
 }
 
 export function createSession(tableNumber: string): DiningSession {
+  const normalizedTable = normalizeTableNumber(tableNumber);
   const now = new Date().toISOString();
   const session: DiningSession = {
     id: generateSessionId(),
     restaurantId: RESTAURANT.id,
-    tableId: `t${tableNumber}`,
-    tableNumber,
+    tableId: `t${normalizedTable}`,
+    tableNumber: normalizedTable,
     status: "ACTIVE",
     sessionIdentifier: `#${generateSessionId()}`,
     createdAt: now,
