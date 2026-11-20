@@ -39,7 +39,7 @@ export type PayBillInput = z.infer<typeof payBillSchema>;
 export function parsePayBillInput(value: unknown): PayBillInput {
   const result = payBillSchema.safeParse(value);
   if (!result.success) {
-    const first = result.issues[0];
+    const first = result.error.issues[0];
     throw new BillError(400, first ? `method: ${first.message}` : "Invalid payment details.");
   }
   return result.data;
