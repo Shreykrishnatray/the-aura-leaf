@@ -86,6 +86,25 @@ table creates the `DiningSession` row and marks the table `occupied`.
 non-terminal state). Repeating the current status is a no-op; anything else
 returns `409`.
 
+### Billing and payments
+
+| Route | Description |
+| --- | --- |
+| `POST /api/bills` | Generate/refresh a session bill from persisted non-cancelled orders |
+| `GET /api/bills?sessionId=…` | Retrieve the bill for a session |
+| `POST /api/payments` | Record a simulated payment (`billId`, `method`) and close session/release table |
+
+Payments are demo-only; no payment gateway is connected.
+
+### Admin
+
+- `/admin` — revenue totals, orders, payment counts, menu count, table status, recent orders.
+- `GET /api/admin/summary` — dashboard data.
+
+### DBMS SQL features
+
+Run `docs/dbms-phase5.sql` in MySQL Workbench after schema setup to create views, stored procedures, a payment trigger, indexes and sample reporting queries.
+
 ## Notes
 
 - The static files in `src/data` remain the seed source of truth for the menu.
