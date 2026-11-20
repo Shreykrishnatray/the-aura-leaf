@@ -20,10 +20,15 @@ const PAYMENT_METHODS = [
 export default function PaymentPage() {
   const router = useRouter();
   const { session, processPayment, tableNumber } = useApp();
+  const [billId, setBillId] = useState<string | null>(null);
+  const [billTotal, setBillTotal] = useState<number | null>(null);
+  const [paymentError, setPaymentError] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
+    const queryBillId = new URLSearchParams(window.location.search).get("billId");
+    if (queryBillId) { setBillId(queryBillId); fetch(`/api/bills?sessionId=${encodeURIComponent(session?.id ?? "")}`).then(r=>r.json()).then(b=>{if(b.id===queryBillId)setBillTotal(b.total)}).catch(()=>{}); }
     if (!session || session.orders.length === 0 || session.status === "COMPLETED") {
       router.replace(tableNumber ? `/menu?table=${tableNumber}` : "/menu");
     }
@@ -33,15 +38,13 @@ export default function PaymentPage() {
     return null;
   }
 
-  const total = session.orders.reduce((sum, o) => sum + o.total, 0);
+  const total = billTotal ?? session.orders.reduce((sum, o) => sum + o.total, 0);
 
   const handlePay = async () => {
     if (!selectedMethod) return;
     setProcessing(true);
-    // Simulate payment processing
-    await new Promise((r) => setTimeout(r, 2000));
-    processPayment();
-    router.push(`/success?table=${session.tableNumber}`);
+    if (!billId) { setPaymentError("Bill not found. Please return to the bill page and request it again."); setProcessing(false); return; }
+    try { const response = await fetch("/api/payments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ billId, method: selectedMethod }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Payment failed."); processPayment(); router.push(`/success?table=${session.tableNumber}&paymentId=${result.payment.id}`); } catch (error) { setPaymentError(error instanceof Error ? error.message : "Payment failed."); setProcessing(false); }
   };
 
   return (
@@ -120,6 +123,7 @@ export default function PaymentPage() {
           })}
         </div>
 
+        {paymentError && <p role="alert" className="mb-3 text-sm text-destructive">{paymentError}</p>}
         <Button
           onClick={handlePay}
           disabled={!selectedMethod || processing}
